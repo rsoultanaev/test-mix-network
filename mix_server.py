@@ -11,11 +11,14 @@ from petlib.bn import Bn
 
 import sys
 import asyncio
+import os
+import os.path
 
 from init_mix import public_key_from_str
 
 params = SphinxParams()
 param_dict = { (params.max_len, params.m): params }
+temp_folder = 'temp'
 
 my_port = int(sys.argv[1])
 port_to_public_key = dict()
@@ -49,7 +52,10 @@ else:
         public_key = public_key_from_str(sys.argv[i + 1], params.group.G)
         port_to_public_key[port] = public_key
 
-log_filename = 'temp/{}'.format(my_port)
+if not os.path.exists(temp_folder):
+    os.makedirs(temp_folder)
+
+log_filename = os.path.join(temp_folder, str(my_port))
 log_file = open(log_filename, 'a')
 
 async def process_message(reader, writer):
