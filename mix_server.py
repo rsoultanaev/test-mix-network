@@ -82,6 +82,22 @@ async def process_message(reader, writer):
         log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Received message - destination: {}, message: {}\n'.format(datetime.now(), final_dest.decode(), final_message.decode()))
         log_file.flush()
 
+        _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
+
+        email_msg =  b'EHLO localhost\r\n'
+        email_msg += b'mail from: mixserver@sphinx.com\r\n'
+        email_msg += b'rcpt to: rsoultanaev@localhost\r\n'
+        email_msg += b'data\r\n'
+        email_msg += b'Subject: sphinx server send\r\n'
+        email_msg += b'final_dest - ' + final_dest + b'\r\n'
+        email_msg += b'final_message - ' + final_message + b'\r\n'
+        email_msg += b'.\r\n'
+        email_msg += b'QUIT\r\n'
+
+        email_writer.write(email_msg)
+        await email_writer.drain()
+        email_writer.close()
+
     writer.close()
 
 loop = asyncio.get_event_loop()
