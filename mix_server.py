@@ -85,8 +85,8 @@ async def process_message(reader, writer):
         _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
 
         email_msg =  b'EHLO localhost\r\n'
-        email_msg += b'mail from: mixserver@sphinx.com\r\n'
-        email_msg += b'rcpt to: rsoultanaev@localhost\r\n'
+        email_msg += b'mail from: mixserver' + bytes(str(my_port), 'utf-8') + b'@sphinx.com\r\n'
+        email_msg += b'rcpt to: ' + bytes(final_dest) + b'\r\n'
         email_msg += b'data\r\n'
         email_msg += b'Subject: sphinx server send\r\n'
         email_msg += b'final_dest - ' + final_dest + b'\r\n'
