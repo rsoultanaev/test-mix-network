@@ -9,6 +9,9 @@ from datetime import datetime
 
 from petlib.bn import Bn
 
+from uuid import UUID
+from binascii import hexlify
+
 import sys
 import asyncio
 import os
@@ -79,8 +82,30 @@ async def process_message(reader, writer):
         next_writer.close()
     elif routing[0] == Dest_flag:
         final_dest, final_message = receive_forward(params, delta)
-        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Received message - destination: {}, message: {}\n'.format(datetime.now(), final_dest.decode(), final_message.decode()))
+
+        header_bytes = hexlify(final_message[:48])
+
+        total = int.from_bytes(final_message[16:20], byteorder='big')
+        seq = int.from_bytes(final_message[20:24], byteorder='big')
+        payload = final_message[24:]
+
+        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Received message for: {}\nheader: {}\ntotal: {}, seq: {}\n{}'.format(datetime.now(), final_dest.decode(), str(header_bytes), total, seq, payload.decode()))
         log_file.flush()
+
+        _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
+
+        email_msg =  b'EHLO localhost\r\n'
+        email_msg += b'mail from: mixserver' + bytes(str(my_port), 'utf-8') + b'@sphinx.com\r\n'
+        email_msg += b'rcpt to: ' + bytes(final_dest) + b'\r\n'
+        email_msg += b'data\r\n'
+        email_msg += b'Subject: Sphinx packet\r\n'
+        email_msg += final_message
+        email_msg += b'\r\n.\r\n'
+        email_msg += b'QUIT\r\n'
+
+        email_writer.write(email_msg)
+        await email_writer.drain()
+        email_writer.close()
 
     writer.close()
 
