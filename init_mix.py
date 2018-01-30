@@ -22,7 +22,7 @@ def public_key_from_str(public_key_string, ecpt_group):
     public_key_byte_string = unhexlify(public_key_string.encode('utf-8'))
     return EcPt.from_binary(public_key_byte_string, ecpt_group)
 
-def init_mix_network(num_servers=10, output_filename='mix_nodes'):
+def init_mix_network(num_servers=10, mix_nodes_filename='mix_nodes', client_config_filename='mix_network.csv'):
     base_port = 8000
     server_ports = [str(base_port + i) for i in range(num_servers)]
     private_keys = [params.group.gensecret() for i in range(num_servers)]
@@ -37,16 +37,24 @@ def init_mix_network(num_servers=10, output_filename='mix_nodes'):
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)
 
-    output_filename = os.path.join(temp_folder, output_filename)
-    output_file = open(output_filename, 'w')
+    mix_nodes_filename = os.path.join(temp_folder, mix_nodes_filename)
+    output_file = open(mix_nodes_filename, 'w')
 
     for mix_node in mix_nodes:
         output_file.write(','.join(mix_node) + '\n')
 
     output_file.close()
 
+    client_config_filename = os.path.join(temp_folder, client_config_filename)
+    output_file = open(client_config_filename, 'w')
+
+    for mix_node in mix_nodes:
+        output_file.write(','.join(mix_node[:2]) + '\n')
+
+    output_file.close()
+
     for port in server_ports:
-        subprocess.Popen('./mix_server.py {} {}'.format(port, output_filename), shell=True)
+        subprocess.Popen('./mix_server.py {} {}'.format(port, mix_nodes_filename), shell=True)
         print('Started server on:', port)
 
 if __name__ == "__main__":
