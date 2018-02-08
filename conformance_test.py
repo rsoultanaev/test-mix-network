@@ -31,8 +31,6 @@ def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
     for node_key_pair in node_key_pairs:
         run_command.append(node_key_pair)
 
-    print(run_command)
-
     return subprocess.run(run_command, stdout=subprocess.PIPE).stdout
 
 
