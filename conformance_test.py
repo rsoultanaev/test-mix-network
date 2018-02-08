@@ -2,8 +2,6 @@ from sphinxmix.SphinxClient import *
 from sphinxmix.SphinxParams import SphinxParams
 from sphinxmix.SphinxNode import sphinx_process
 
-from struct import pack, unpack
-
 from petlib.bn import Bn
 
 from base64 import b64encode
@@ -18,7 +16,7 @@ def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
 
     node_key_pairs = []
     for i in range(len(use_nodes)):
-        pair = str(unpack('b', use_nodes[i])[0]) + ":" + b64encode(node_keys[i].export()).decode()
+        pair = str(use_nodes[i]) + ":" + b64encode(node_keys[i].export()).decode()
         node_key_pairs.append(pair)
 
     run_command = []
@@ -41,7 +39,7 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
     pkiPub = {}
 
     for i in range(num_mix_nodes):
-        nid = pack("b", i)
+        nid = i
         x = params.group.gensecret()
         y = params.group.expon(params.group.g, x)
         pkiPriv[nid] = pki_entry(nid, x, y)
