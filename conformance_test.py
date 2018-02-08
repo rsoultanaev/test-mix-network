@@ -2,6 +2,8 @@ from sphinxmix.SphinxClient import *
 from sphinxmix.SphinxParams import SphinxParams
 from sphinxmix.SphinxNode import sphinx_process
 
+from struct import pack, unpack
+
 from petlib.bn import Bn
 
 from base64 import b64encode
@@ -12,17 +14,26 @@ import subprocess
 
 def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
     dest_encoded = b64encode(dest).decode()
-    message_encoded = b64encode(message_encoded).decode()
+    message_encoded = b64encode(message).decode()
 
     node_key_pairs = []
-    for i in len(use_nodes):
-        node_key_pairs.append(str(use_nodes[i]) + ":" + b64encode(node_keys[i].export()).decode())
+    for i in range(len(use_nodes)):
+        pair = str(unpack('b', use_nodes[i])[0]) + ":" + b64encode(node_keys[i].export()).decode()
+        node_key_pairs.append(pair)
 
-    run_command = [client_command, dest_encoded, message_encoded]
+    run_command = []
+    for command in client_command.split(' '):
+        run_command.append(command)
+
+    run_command.append(dest_encoded)
+    run_command.append(message_encoded)
+
     for node_key_pair in node_key_pairs:
         run_command.append(node_key_pair)
 
-    return subprocess.run(run_command, stdout=subprocess.PIPE)
+    print(run_command)
+
+    return subprocess.run(run_command, stdout=subprocess.PIPE).stdout
 
 
 def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
@@ -75,5 +86,5 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
 
 
 if __name__ == "__main__":
-    test_create_forward_message_creation(int(sys.argv[1])):
+    test_create_forward_message_creation(sys.argv[1])
 
