@@ -83,13 +83,15 @@ async def process_message(reader, writer):
     elif routing[0] == Dest_flag:
         final_dest, final_message = receive_forward(params, delta)
 
-        header_bytes = hexlify(final_message[:48])
+        message_id = str(UUID(bytes=final_message[:16]))
+        packets_in_message = int.from_bytes(final_message[16:20], byteorder='big')
+        sequence_number = int.from_bytes(final_message[20:24], byteorder='big')
 
-        total = int.from_bytes(final_message[16:20], byteorder='big')
-        seq = int.from_bytes(final_message[20:24], byteorder='big')
-        payload = final_message[24:]
-
-        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Received message for: {}\nheader: {}\ntotal: {}, seq: {}\n{}'.format(datetime.now(), final_dest.decode(), str(header_bytes), total, seq, payload.decode()))
+        log_file.write('{:%Y_%m_%d_%H_%M_%S}\n'.format(datetime.now()))
+        log_file.write('Received packet for: {}\n'.format(final_dest.decode()))
+        log_file.write('Message ID:          {}\n'.format(message_id))
+        log_file.write('Packets in message:  {}\n'.format(packets_in_message))
+        log_file.write('Sequence number:     {}\n'.format(sequence_number))
         log_file.flush()
 
         _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
