@@ -17,6 +17,8 @@ import asyncio
 import os
 import os.path
 
+from base64 import b64encode
+
 from init_mix import public_key_from_str
 
 params = SphinxParams()
@@ -94,14 +96,17 @@ async def process_message(reader, writer):
         log_file.write('Sequence number:     {}\n'.format(sequence_number))
         log_file.flush()
 
+        encoded_packet = b64encode(final_message)
+        email_subject = bytes('Subject: {}, {}, {}\r\n'.format(message_id, packets_in_message, sequence_number), 'utf-8')
         _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
 
         email_msg =  b'EHLO localhost\r\n'
         email_msg += b'mail from: mixserver' + bytes(str(my_port), 'utf-8') + b'@sphinx.com\r\n'
         email_msg += b'rcpt to: ' + bytes(final_dest) + b'\r\n'
         email_msg += b'data\r\n'
-        email_msg += b'Subject: Sphinx packet\r\n'
-        email_msg += final_message
+        email_msg += email_subject
+        #email_msg += b'Subject: Sphinx packet\r\n'
+        email_msg += encoded_packet
         email_msg += b'\r\n.\r\n'
         email_msg += b'QUIT\r\n'
 
