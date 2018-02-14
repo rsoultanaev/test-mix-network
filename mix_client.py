@@ -1,9 +1,6 @@
-#!venv/bin/python3
-
 from sphinxmix.SphinxParams import SphinxParams
 from sphinxmix.SphinxClient import Nenc, create_forward_message, pack_message, rand_subset
 
-import sys
 import asyncio
 
 from argparse import ArgumentParser
@@ -11,9 +8,9 @@ from argparse import ArgumentParser
 from init_mix import public_key_from_str
 
 arg_parser = ArgumentParser()
-arg_parser.add_argument("-n", "--mix-network-filename")
-arg_parser.add_argument("-d", "--destination")
-arg_parser.add_argument("-m", "--message")
+arg_parser.add_argument("-n", "--mix-network-filename", default='temp/mix_nodes')
+arg_parser.add_argument("-d", "--destination", default='bob@bestmail.com')
+arg_parser.add_argument("-m", "--message", default='00000000000000000000000000000000000000000')
 arg_parser.add_argument("-p", "--num-path-nodes", default=2, type=int)
 args = arg_parser.parse_args()
 
