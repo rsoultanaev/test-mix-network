@@ -21,17 +21,21 @@ from init_mix import public_key_from_str
 from argparse import ArgumentParser
 
 arg_parser = ArgumentParser()
-arg_parser.add_argument("-p", "--port", type=int)
-arg_parser.add_argument("-f", "--mix-network-filename")
-arg_parser.add_argument("-t", "--temp-folder", default='temp')
+arg_parser.add_argument('-i', '--node-id', type=int)
+arg_parser.add_argument('-a', '--host')
+arg_parser.add_argument('-p', '--port', type=int)
+arg_parser.add_argument('-f', '--mix-network-filename')
+arg_parser.add_argument('-t', '--temp-folder')
 args = arg_parser.parse_args()
 
 params = SphinxParams()
 param_dict = { (params.max_len, params.m): params }
 temp_folder = args.temp_folder
 
+my_id = args.node_id
 my_port = args.port
-port_to_public_key = dict()
+my_host = args.host
+id_to_mix_node = dict()
 
 mix_network_filename = args.mix_network_filename
 mix_network_file = open(mix_network_filename)
@@ -39,14 +43,13 @@ mix_network_file = open(mix_network_filename)
 for line in mix_network_file.readlines():
     split_line = line[:-1].split(',')
 
-    port = int(split_line[0])
+    node_id = int(split_line[0])
 
-    if port == my_port:
-        my_public_key = public_key_from_str(split_line[1], params.group.G)
-        my_private_key = Bn.from_decimal(split_line[2])
+    if node_id == my_id:
+        my_public_key = public_key_from_str(split_line[3], params.group.G)
+        my_private_key = Bn.from_decimal(split_line[4])
     else:
-        public_key = public_key_from_str(split_line[1], params.group.G)
-        port_to_public_key[port] = public_key
+        id_to_mix_node[node_id] = (split_line[1], int(split_line[2]))
 
 mix_network_file.close()
 
@@ -64,11 +67,11 @@ async def process_message(reader, writer):
     routing = PFdecode(params, info)
 
     if routing[0] == Relay_flag:
-        next_port = routing[1]
-        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Relaying to: {}\n'.format(datetime.now(), next_port))
+        next_host, next_port = id_to_mix_node[routing[1]]
+        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Relaying to {}:{}\n'.format(datetime.now(), next_host, next_port))
         log_file.flush()
 
-        _, next_writer = await asyncio.open_connection('127.0.0.1', next_port)
+        _, next_writer = await asyncio.open_connection(next_host, next_port)
         next_message = pack_message(params, (header, delta))
 
         next_writer.write(next_message)
@@ -110,11 +113,11 @@ async def process_message(reader, writer):
     writer.close()
 
 loop = asyncio.get_event_loop()
-coro = asyncio.start_server(process_message, '127.0.0.1', my_port, loop=loop)
+coro = asyncio.start_server(process_message, my_host, my_port, loop=loop)
 server = loop.run_until_complete(coro)
 
 # Serve requests until Ctrl+C is pressed
-log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Serving on {}\n'.format(datetime.now(), server.sockets[0].getsockname()))
+log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Serving on {}:{}\n'.format(datetime.now(), my_host, my_port))
 log_file.flush()
 try:
     loop.run_forever()
