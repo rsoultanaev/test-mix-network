@@ -8,10 +8,10 @@ from argparse import ArgumentParser
 from init_mix import public_key_from_str
 
 arg_parser = ArgumentParser()
-arg_parser.add_argument("-n", "--mix-network-filename", default='temp/mix_nodes')
+arg_parser.add_argument("-f", "--mix-network-filename", default='temp/mix_nodes')
 arg_parser.add_argument("-d", "--destination", default='bob@bestmail.com')
 arg_parser.add_argument("-m", "--message", default='00000000000000000000000000000000000000000')
-arg_parser.add_argument("-p", "--num-path-nodes", default=2, type=int)
+arg_parser.add_argument("-r", "--num-path-nodes", default=2, type=int)
 args = arg_parser.parse_args()
 
 mix_network_filename = args.mix_network_filename
