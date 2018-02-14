@@ -17,6 +17,8 @@ import asyncio
 import os
 import os.path
 
+from base64 import b64encode
+
 from init_mix import public_key_from_str
 
 params = SphinxParams()
@@ -83,23 +85,28 @@ async def process_message(reader, writer):
     elif routing[0] == Dest_flag:
         final_dest, final_message = receive_forward(params, delta)
 
-        header_bytes = hexlify(final_message[:48])
+        message_id = str(UUID(bytes=final_message[:16]))
+        packets_in_message = int.from_bytes(final_message[16:20], byteorder='big')
+        sequence_number = int.from_bytes(final_message[20:24], byteorder='big')
 
-        total = int.from_bytes(final_message[16:20], byteorder='big')
-        seq = int.from_bytes(final_message[20:24], byteorder='big')
-        payload = final_message[24:]
-
-        log_file.write('{:%Y_%m_%d_%H_%M_%S} -- Received message for: {}\nheader: {}\ntotal: {}, seq: {}\n{}'.format(datetime.now(), final_dest.decode(), str(header_bytes), total, seq, payload.decode()))
+        log_file.write('{:%Y_%m_%d_%H_%M_%S}\n'.format(datetime.now()))
+        log_file.write('Received packet for: {}\n'.format(final_dest.decode()))
+        log_file.write('Message ID:          {}\n'.format(message_id))
+        log_file.write('Packets in message:  {}\n'.format(packets_in_message))
+        log_file.write('Sequence number:     {}\n'.format(sequence_number))
         log_file.flush()
 
+        encoded_packet = b64encode(final_message)
+        email_subject = bytes('Subject: {}, {}, {}\r\n'.format(message_id, packets_in_message, sequence_number), 'utf-8')
         _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
 
         email_msg =  b'EHLO localhost\r\n'
         email_msg += b'mail from: mixserver' + bytes(str(my_port), 'utf-8') + b'@sphinx.com\r\n'
         email_msg += b'rcpt to: ' + bytes(final_dest) + b'\r\n'
         email_msg += b'data\r\n'
-        email_msg += b'Subject: Sphinx packet\r\n'
-        email_msg += final_message
+        email_msg += email_subject
+        #email_msg += b'Subject: Sphinx packet\r\n'
+        email_msg += encoded_packet
         email_msg += b'\r\n.\r\n'
         email_msg += b'QUIT\r\n'
 
