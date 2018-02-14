@@ -55,7 +55,7 @@ def init_mix_network(num_servers, temp_folder, use_existing_config):
         output_file.close()
 
     for port in server_ports:
-        subprocess.Popen('python3 mix_server.py -p {} -f {}'.format(port, mix_nodes_filename), shell=True)
+        subprocess.Popen('python3 mix_server.py -p {} -f {} -t {}'.format(port, mix_nodes_filename, temp_folder), shell=True)
         print('Started server on:', port)
 
 if __name__ == "__main__":

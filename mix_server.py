@@ -23,11 +23,12 @@ from argparse import ArgumentParser
 arg_parser = ArgumentParser()
 arg_parser.add_argument("-p", "--port", type=int)
 arg_parser.add_argument("-f", "--mix-network-filename")
+arg_parser.add_argument("-t", "--temp-folder", default='temp')
 args = arg_parser.parse_args()
 
 params = SphinxParams()
 param_dict = { (params.max_len, params.m): params }
-temp_folder = 'temp'
+temp_folder = args.temp_folder
 
 my_port = args.port
 port_to_public_key = dict()
