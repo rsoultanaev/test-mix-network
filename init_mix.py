@@ -10,6 +10,8 @@ import subprocess
 import os
 import os.path
 
+from argparse import ArgumentParser
+
 def public_key_to_str(public_key):
     return hexlify(public_key.export()).decode('utf-8')
 
@@ -17,13 +19,7 @@ def public_key_from_str(public_key_string, ecpt_group):
     public_key_byte_string = unhexlify(public_key_string.encode('utf-8'))
     return EcPt.from_binary(public_key_byte_string, ecpt_group)
 
-def init_mix_network(num_servers=10, temp_folder=None):
-    use_existing_config = True
-
-    if temp_folder is None:
-        use_existing_config = False
-        temp_folder = 'temp'
-
+def init_mix_network(num_servers, temp_folder, use_existing_config):
     params = SphinxParams()
     mix_nodes_filename = os.path.join(temp_folder, 'mix_nodes')
     client_config_filename = os.path.join(temp_folder, 'mix_network.csv')
@@ -63,10 +59,11 @@ def init_mix_network(num_servers=10, temp_folder=None):
         print('Started server on:', port)
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        init_mix_network()
-    elif len(sys.argv) == 2:
-        init_mix_network(int(sys.argv[1]))
-    else:
-        init_mix_network(int(sys.argv[1]), sys.argv[2])
+    arg_parser = ArgumentParser()
+    arg_parser.add_argument('-n', '--num-servers', type=int, default=3)
+    arg_parser.add_argument('-t', '--temp-folder', default='temp')
+    arg_parser.add_argument('-u', '--use-existing', action='store_true')
+    args = arg_parser.parse_args()
+
+    init_mix_network(args.num_servers, args.temp_folder, args.use_existing)
 
