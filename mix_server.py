@@ -1,5 +1,3 @@
-#!venv/bin/python3
-
 from sphinxmix.SphinxParams import SphinxParams
 from sphinxmix.SphinxClient import pack_message, unpack_message
 from sphinxmix.SphinxNode import sphinx_process
@@ -12,7 +10,6 @@ from petlib.bn import Bn
 from uuid import UUID
 from binascii import hexlify
 
-import sys
 import asyncio
 import os
 import os.path
@@ -21,41 +18,36 @@ from base64 import b64encode
 
 from init_mix import public_key_from_str
 
+from argparse import ArgumentParser
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument("-p", "--port", type=int)
+arg_parser.add_argument("-f", "--mix-network-filename")
+args = arg_parser.parse_args()
+
 params = SphinxParams()
 param_dict = { (params.max_len, params.m): params }
 temp_folder = 'temp'
 
-my_port = int(sys.argv[1])
+my_port = args.port
 port_to_public_key = dict()
 
-if len(sys.argv) == 3:
-    # Use file as source of mix network info
-    mix_network_filename = sys.argv[2]
-    mix_network_file = open(mix_network_filename)
+mix_network_filename = args.mix_network_filename
+mix_network_file = open(mix_network_filename)
 
-    for line in mix_network_file.readlines():
-        split_line = line[:-1].split(',')
+for line in mix_network_file.readlines():
+    split_line = line[:-1].split(',')
 
-        port = int(split_line[0])
+    port = int(split_line[0])
 
-        if port == my_port:
-            my_public_key = public_key_from_str(split_line[1], params.group.G)
-            my_private_key = Bn.from_decimal(split_line[2])
-        else:
-            public_key = public_key_from_str(split_line[1], params.group.G)
-            port_to_public_key[port] = public_key
-
-    mix_network_file.close()
-else:
-    # Use command line params as source of mix network info
-    my_port = int(sys.argv[1])
-    my_private_key = Bn.from_decimal(sys.argv[2])
-    my_public_key = public_key_from_str(sys.argv[3], params.group.G)
-
-    for i in range(4, len(sys.argv), 2):
-        port = int(sys.argv[i])
-        public_key = public_key_from_str(sys.argv[i + 1], params.group.G)
+    if port == my_port:
+        my_public_key = public_key_from_str(split_line[1], params.group.G)
+        my_private_key = Bn.from_decimal(split_line[2])
+    else:
+        public_key = public_key_from_str(split_line[1], params.group.G)
         port_to_public_key[port] = public_key
+
+mix_network_file.close()
 
 if not os.path.exists(temp_folder):
     os.makedirs(temp_folder)

@@ -1,5 +1,3 @@
-#!venv/bin/python3
-
 from petlib.bn import Bn
 from petlib.ec import EcPt 
 
@@ -61,7 +59,7 @@ def init_mix_network(num_servers=10, temp_folder=None):
         output_file.close()
 
     for port in server_ports:
-        subprocess.Popen('./mix_server.py {} {}'.format(port, mix_nodes_filename), shell=True)
+        subprocess.Popen('python3 mix_server.py -p {} -f {}'.format(port, mix_nodes_filename), shell=True)
         print('Started server on:', port)
 
 if __name__ == "__main__":
