@@ -6,21 +6,25 @@ from sphinxmix.SphinxClient import Nenc, create_forward_message, pack_message, r
 import sys
 import asyncio
 
+from argparse import ArgumentParser
+
 from init_mix import public_key_from_str
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument("-n", "--mix-network-filename")
+arg_parser.add_argument("-d", "--destination")
+arg_parser.add_argument("-m", "--message")
+arg_parser.add_argument("-p", "--num-path-nodes", default=2, type=int)
+args = arg_parser.parse_args()
+
+mix_network_filename = args.mix_network_filename
+destination = args.destination
+message = args.message
+num_path_nodes = args.num_path_nodes
 
 params = SphinxParams()
 param_dict = { (params.max_len, params.m): params }
-
 port_to_public_key = dict()
-
-mix_network_filename = sys.argv[1]
-destination = sys.argv[2]
-message = sys.argv[3]
-
-if len(sys.argv) >= 5:
-    num_path_nodes = int(sys.argv[4])
-else:
-    num_path_nodes = 2
 
 mix_network_file = open(mix_network_filename)
 
