@@ -1,10 +1,9 @@
 ## Set-up
 
-Install `pip` and `virtualenv`.
+Install `pip3`.
 
 ```
 sudo apt-get install python3-pip
-sudo pip3 install virtualenv
 ```
 
 Install some native libraries required by the dependencies of this project.
@@ -17,29 +16,25 @@ sudo apt-get install libssl-dev
 Create a virtual environment and install dependencies.
 
 ```
-virtualenv venv
-source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
 ## Usage
 
-All commands below assume you are running them within the virtual environment (i.e. do `source venv/bin/activate` before running stuff below).
+Both `init_mix.py` and `mix_server.py` will put temporary files like logs and generated mix network configs into a specified temporary folder (`temp` by default). The folder is created automatically if it doesn't already exist.
 
-Both `init_mix.py` and `mix_server.py` will put temporary files like logs and generated mix network configs into the `temp` folder. The folder is created automatically if it doesn't already exist.
-
-Initialise the mix network. The init script takes two optional parameters - number of mix nodes (defaults to 10), and the name of the file that will hold the generated mix network configuration (defaults to `mix_nodes`, and stored in the `temp` folder).
+Initialise the mix network. The init script takes three optional parameters - number of mix nodes (defaults to 3), name of the temporary folder (defaults to `temp`), and whether to use an existing config (will look for it in the temporary folder).
 
 ```
-./init_mix.py [number of mix nodes] [mix network config file name]
+python3 init_mix.py [-n number of mix nodes] [-t temporary folder] [-u]
 ```
 
 This will spawn a number of `mix_server.py` instances. Each server's output can be seen in their log files, which follow the naming convention `temp/[server's port]`. The ports taken up by the servers start at 8000 and count upwards.
 
-To send a message, the `mix_client.py` script can be used. The three required arguments are: path to the mix network config file created by `init_mix.py`, message destination, and message content. The fourth optional parameter specifies how many mix servers to randomly select from the network to route the message through (defaults to 2). Example:
+To send a message, the `mix_client.py` script can be used. The arguments are: path to the mix network config file created by `init_mix.py`, message destination, and message content. The fourth optional parameter specifies how many mix servers to randomly select from the network to route the message through (defaults to 2). Example:
 
 ```
-./mix_client.py temp/mix_nodes Bob Hello 3
+./mix_client.py -f temp/mix_nodes -d bob@somemail.com -m hello -r 3
 ```
 
 The above will randomly pick 3 nodes out the mix network and create a message to be routed through them. The final server on the path will output the message destination and content into its log file.
