@@ -22,7 +22,7 @@ from argparse import ArgumentParser
 
 arg_parser = ArgumentParser()
 arg_parser.add_argument('-i', '--node-id', type=int)
-arg_parser.add_argument('-a', '--host')
+arg_parser.add_argument('-a', '--host', default='0.0.0.0')
 arg_parser.add_argument('-p', '--port', type=int)
 arg_parser.add_argument('-f', '--mix-network-filename')
 arg_parser.add_argument('-t', '--temp-folder')
