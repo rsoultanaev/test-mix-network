@@ -57,7 +57,7 @@ def init_mix_network(num_servers, temp_folder, use_existing_config, server_publi
 
         output_file = open(client_config_filename, 'w')
 
-        for mix_node in mix_client_config_lines:
+        for line in mix_client_config_lines:
             output_file.write(line + '\n')
 
         output_file.close()
