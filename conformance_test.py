@@ -32,18 +32,24 @@ def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
     return subprocess.run(run_command, stdout=subprocess.PIPE).stdout
 
 
-def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
-    params = SphinxParams()
-    
-    pkiPriv = {}
-    pkiPub = {}
+def initialise_pki(sphinx_params, num_mix_nodes):
+    pki_priv = {}
+    pki_pub = {}
 
     for i in range(num_mix_nodes):
-        nid = i
-        x = params.group.gensecret()
-        y = params.group.expon(params.group.g, x)
-        pkiPriv[nid] = pki_entry(nid, x, y)
-        pkiPub[nid] = pki_entry(nid, None, y)
+        node_id = i
+        x = sphinx_params.group.gensecret()
+        y = sphinx_params.group.expon(sphinx_params.group.g, x)
+        pki_priv[node_id] = pki_entry(node_id, x, y)
+        pki_pub[node_id] = pki_entry(node_id, None, y)
+
+    return pki_priv, pki_pub
+
+
+def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
+    params = SphinxParams()
+
+    pkiPriv, pkiPub = initialise_pki(params, num_mix_nodes)
 
     use_nodes = rand_subset(pkiPub.keys(), num_path_nodes)
     nodes_routing = list(map(Nenc, use_nodes))
