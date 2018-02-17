@@ -45,6 +45,26 @@ def initialise_pki(sphinx_params, num_mix_nodes):
     return pki
 
 
+def route_message_through_network(sphinx_params, pki, current_node_id, bin_message):
+    param_dict = { (sphinx_params.max_len, sphinx_params.m): sphinx_params }
+    _, (header, delta) = unpack_message(param_dict, bin_message)
+
+    current_private_key = pki[current_node_id].private_key
+
+    while True:
+        ret = sphinx_process(sphinx_params, current_private_key, header, delta)
+        (tag, B, (header, delta)) = ret
+        routing = PFdecode(sphinx_params, B)
+
+        if routing[0] == Relay_flag:
+            current_node_id = routing[1]
+            current_private_key = pki[current_node_id].private_key 
+        elif routing[0] == Dest_flag:
+            return receive_forward(sphinx_params, delta)
+        else:
+            return None
+
+
 def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
     params = SphinxParams()
 
@@ -59,31 +79,18 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
 
     bin_message = run_client_under_test(client_command, dest, message, use_nodes, node_keys)
 
-    param_dict = { (params.max_len, params.m): params }
-    _, (header, delta) = unpack_message(param_dict, bin_message)
+    routing_result = route_message_through_network(params, pki, use_nodes[0], bin_message)
+    if routing_result:
+        routed_dest, routed_message = routing_result
 
-    x = pki[use_nodes[0]].private_key
-
-    while True:
-        ret = sphinx_process(params, x, header, delta)
-        (tag, B, (header, delta)) = ret
-        routing = PFdecode(params, B)
-
-        if routing[0] == Relay_flag:
-            addr = routing[1]
-            x = pki[addr].private_key 
-        elif routing[0] == Dest_flag:
-            dec_dest, dec_msg = receive_forward(params, delta)
-
-            if dec_dest == dest and dec_msg == message:
-                print('Success')
-            else:
-                print('Failure')
-
-            break
+        if routed_dest == dest and routed_message == message:
+            print('Success')
         else:
             print('Failure')
-            break
+    else:
+        print('Failure')
+
+
 
 
 if __name__ == '__main__':
