@@ -26,6 +26,7 @@ arg_parser.add_argument('-a', '--host', default='0.0.0.0')
 arg_parser.add_argument('-p', '--port', type=int)
 arg_parser.add_argument('-f', '--mix-network-filename')
 arg_parser.add_argument('-t', '--temp-folder')
+arg_parser.add_argument('-e', '--email-host', default='ec2-35-178-56-77.eu-west-2.compute.amazonaws.com')
 args = arg_parser.parse_args()
 
 params = SphinxParams()
@@ -39,6 +40,8 @@ id_to_mix_node = dict()
 
 mix_network_filename = args.mix_network_filename
 mix_network_file = open(mix_network_filename)
+
+email_host = args.email_host
 
 for line in mix_network_file.readlines():
     split_line = line[:-1].split(',')
@@ -94,14 +97,13 @@ async def process_message(reader, writer):
 
         encoded_packet = b64encode(final_message)
         email_subject = bytes('Subject: {}, {}, {}\r\n'.format(message_id, packets_in_message, sequence_number), 'utf-8')
-        _, email_writer = await asyncio.open_connection('127.0.0.1', 25)
+        _, email_writer = await asyncio.open_connection(email_host, 25)
 
         email_msg =  b'EHLO localhost\r\n'
-        email_msg += b'mail from: mixserver' + bytes(str(my_port), 'utf-8') + b'@sphinx.com\r\n'
+        email_msg += b'mail from: mix-node-' + bytes(str(my_id), 'utf-8') + b'@sphinx-network.net\r\n'
         email_msg += b'rcpt to: ' + bytes(final_dest) + b'\r\n'
         email_msg += b'data\r\n'
         email_msg += email_subject
-        #email_msg += b'Subject: Sphinx packet\r\n'
         email_msg += encoded_packet
         email_msg += b'\r\n.\r\n'
         email_msg += b'QUIT\r\n'
