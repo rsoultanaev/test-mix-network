@@ -66,9 +66,9 @@ def route_message_through_network(sphinx_params, pki, current_node_id, bin_messa
 
 
 def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
-    params = SphinxParams()
+    sphinx_params = SphinxParams()
 
-    pki = initialise_pki(params, num_mix_nodes)
+    pki = initialise_pki(sphinx_params, num_mix_nodes)
 
     use_nodes = rand_subset(pki.keys(), num_path_nodes)
     nodes_routing = list(map(Nenc, use_nodes))
@@ -79,7 +79,7 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
 
     bin_message = run_client_under_test(client_command, dest, message, use_nodes, node_keys)
 
-    routing_result = route_message_through_network(params, pki, use_nodes[0], bin_message)
+    routing_result = route_message_through_network(sphinx_params, pki, use_nodes[0], bin_message)
     if routing_result:
         routed_dest, routed_message = routing_result
 
@@ -89,8 +89,6 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
             print('Failure')
     else:
         print('Failure')
-
-
 
 
 if __name__ == '__main__':
