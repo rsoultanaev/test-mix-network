@@ -7,8 +7,6 @@ from petlib.ec import EcPt
 
 from base64 import b64decode
 
-from struct import pack, unpack
-
 import sys
 
 sphinx_params = SphinxParams()
@@ -22,7 +20,7 @@ node_keys = []
 for node_key_pair in args[2:]:
     node_str, key_str = node_key_pair.split(':')
 
-    node = Nenc(pack('b', int(node_str)))
+    node = Nenc(int(node_str))
     key = EcPt.from_binary(b64decode(key_str), sphinx_params.group.G)
 
     nodes_routing.append(node)
