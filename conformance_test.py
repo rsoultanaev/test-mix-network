@@ -9,6 +9,7 @@ from base64 import b64encode
 import sys
 import subprocess
 
+pki_tuple = namedtuple('pki_tuple', ['id', 'private_key', 'public_key'])
 
 def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
     dest_encoded = b64encode(dest).decode()
@@ -16,7 +17,7 @@ def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
 
     node_key_pairs = []
     for i in range(len(use_nodes)):
-        pair = str(use_nodes[i]) + ":" + b64encode(node_keys[i].export()).decode()
+        pair = str(use_nodes[i]) + ':' + b64encode(node_keys[i].export()).decode()
         node_key_pairs.append(pair)
 
     run_command = []
@@ -33,37 +34,35 @@ def run_client_under_test(client_command, dest, message, use_nodes, node_keys):
 
 
 def initialise_pki(sphinx_params, num_mix_nodes):
-    pki_priv = {}
-    pki_pub = {}
+    pki = {}
 
     for i in range(num_mix_nodes):
         node_id = i
-        x = sphinx_params.group.gensecret()
-        y = sphinx_params.group.expon(sphinx_params.group.g, x)
-        pki_priv[node_id] = pki_entry(node_id, x, y)
-        pki_pub[node_id] = pki_entry(node_id, None, y)
+        private_key = sphinx_params.group.gensecret()
+        public_key = sphinx_params.group.expon(sphinx_params.group.g, private_key)
+        pki[node_id] = pki_tuple(node_id, private_key, public_key)
 
-    return pki_priv, pki_pub
+    return pki
 
 
 def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_path_nodes=5):
     params = SphinxParams()
 
-    pkiPriv, pkiPub = initialise_pki(params, num_mix_nodes)
+    pki = initialise_pki(params, num_mix_nodes)
 
-    use_nodes = rand_subset(pkiPub.keys(), num_path_nodes)
+    use_nodes = rand_subset(pki.keys(), num_path_nodes)
     nodes_routing = list(map(Nenc, use_nodes))
-    node_keys = [pkiPub[n].y for n in use_nodes]
+    node_keys = [pki[n].public_key for n in use_nodes]
 
-    dest = b"bob"
-    message = b"this is a test"
+    dest = b'bob'
+    message = b'this is a test'
 
     bin_message = run_client_under_test(client_command, dest, message, use_nodes, node_keys)
 
     param_dict = { (params.max_len, params.m): params }
     _, (header, delta) = unpack_message(param_dict, bin_message)
 
-    x = pkiPriv[use_nodes[0]].x
+    x = pki[use_nodes[0]].private_key
 
     while True:
         ret = sphinx_process(params, x, header, delta)
@@ -72,21 +71,21 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
 
         if routing[0] == Relay_flag:
             addr = routing[1]
-            x = pkiPriv[addr].x 
+            x = pki[addr].private_key 
         elif routing[0] == Dest_flag:
             dec_dest, dec_msg = receive_forward(params, delta)
 
             if dec_dest == dest and dec_msg == message:
-                print("Success")
+                print('Success')
             else:
-                print("Failure")
+                print('Failure')
 
             break
         else:
-            print("Failure")
+            print('Failure')
             break
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_create_forward_message_creation(sys.argv[1])
 
