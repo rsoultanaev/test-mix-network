@@ -12,7 +12,7 @@ For example, the provided `conformance_client.py` would be tested as follows:
 ```
 python3 conformance_test.py 'python3 conformance_client.py'
 ```
-The test will print `Success` if the test is successful, `Failure` otherwise.
+The test will generate parameters for the client (as specified below), execute it and capture the standard output. It will then simulate routing the resulting message through a Sphinx network using the Python implementation, and checks if it gets routed correctly. `Success` will be printed if the test is successful, `Failure` otherwise.
 
 ## Specification for client under test
 
