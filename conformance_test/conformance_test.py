@@ -39,7 +39,7 @@ def initialise_pki(sphinx_params, num_mix_nodes):
     for i in range(num_mix_nodes):
         node_id = i
         private_key = sphinx_params.group.gensecret()
-        public_key = sphinx_params.group.expon(sphinx_params.group.g, private_key)
+        public_key = sphinx_params.group.expon(sphinx_params.group.g, [private_key])
         pki[node_id] = pki_tuple(node_id, private_key, public_key)
 
     return pki
@@ -53,14 +53,14 @@ def route_message_through_network(sphinx_params, pki, current_node_id, bin_messa
 
     while True:
         ret = sphinx_process(sphinx_params, current_private_key, header, delta)
-        (tag, B, (header, delta)) = ret
+        (tag, B, (header, delta), mac_key) = ret
         routing = PFdecode(sphinx_params, B)
 
         if routing[0] == Relay_flag:
             current_node_id = routing[1]
             current_private_key = pki[current_node_id].private_key 
         elif routing[0] == Dest_flag:
-            return receive_forward(sphinx_params, delta)
+            return receive_forward(sphinx_params, mac_key, delta)
         else:
             return None
 

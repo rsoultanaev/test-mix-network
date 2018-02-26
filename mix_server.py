@@ -66,7 +66,7 @@ async def process_message(reader, writer):
     data = await reader.read()
 
     _, (received_header, received_delta) = unpack_message(param_dict, data)
-    (tag, info, (header, delta)) = sphinx_process(params, my_private_key, received_header, received_delta)
+    (tag, info, (header, delta), mac_key) = sphinx_process(params, my_private_key, received_header, received_delta)
     routing = PFdecode(params, info)
 
     if routing[0] == Relay_flag:
@@ -82,7 +82,7 @@ async def process_message(reader, writer):
 
         next_writer.close()
     elif routing[0] == Dest_flag:
-        final_dest, final_message = receive_forward(params, delta)
+        final_dest, final_message = receive_forward(params, mac_key, delta)
 
         message_id = str(UUID(bytes=final_message[:16]))
         packets_in_message = int.from_bytes(final_message[16:20], byteorder='big')
