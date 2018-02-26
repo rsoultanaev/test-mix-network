@@ -13,7 +13,7 @@ sudo apt-get install libffi-dev
 sudo apt-get install libssl-dev
 ```
 
-Create a virtual environment and install dependencies.
+Install dependencies.
 
 ```
 pip3 install -r requirements.txt
