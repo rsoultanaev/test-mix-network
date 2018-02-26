@@ -34,7 +34,7 @@ This will spawn a number of `mix_server.py` instances. Each server's output can 
 To send a message, the `mix_client.py` script can be used. The arguments are: path to the mix network config file created by `init_mix.py`, message destination, and message content. The fourth optional parameter specifies how many mix servers to randomly select from the network to route the message through (defaults to 2). Example:
 
 ```
-./mix_client.py -f temp/mix_nodes -d bob@somemail.com -m hello -r 3
+python3 mix_client.py -f temp/mix_nodes -d bob@somemail.com -m hello -r 3
 ```
 
 The above will randomly pick 3 nodes out the mix network and create a message to be routed through them. The final server on the path will output the message destination and content into its log file.
