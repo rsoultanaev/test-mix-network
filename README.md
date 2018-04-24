@@ -1,3 +1,5 @@
+# Sphinx-based mix network for testing purposes
+
 ## Set-up
 
 Install `pip3`.
@@ -44,3 +46,7 @@ There is currently no "nice" way to close down the mix network, so at the moment
 ```
 pkill -f mix_server
 ```
+
+# Conformance test
+
+For the conformance test against the Python Sphinx library, see the `conformance_test` directory for the test and manual.
