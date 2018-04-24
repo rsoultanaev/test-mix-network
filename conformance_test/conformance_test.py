@@ -93,4 +93,3 @@ def test_create_forward_message_creation(client_command, num_mix_nodes=10, num_p
 
 if __name__ == '__main__':
     test_create_forward_message_creation(sys.argv[1])
-
